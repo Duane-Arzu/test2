@@ -45,8 +45,4 @@ func (v *Validator) Check(acceptable bool, key string, message string) {
 
 func PermittedValue(value string, permittedValues ...string) bool {
 	return slices.Contains(permittedValues, value)
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 0cc1270f48216b9318fcc1ef24b827397488e322
