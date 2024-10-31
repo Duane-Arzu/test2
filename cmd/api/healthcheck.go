@@ -1,11 +1,13 @@
+//cmd/api/healthcheck.go
 package main
 
 import (
 	"net/http"
 )
 
-func (a *applicationDependences) healthChechHandler(w http.ResponseWriter, r *http.Request) {
-
+func (a *applicationDependencies) healthCheckHandler(w http.ResponseWriter,
+	r *http.Request) {
+	//panic("Apples & Oranges")
 	data := envelope{
 		"status": "available",
 		"system_info": map[string]string{
@@ -13,9 +15,9 @@ func (a *applicationDependences) healthChechHandler(w http.ResponseWriter, r *ht
 			"version":     appVersion,
 		},
 	}
-
 	err := a.writeJSON(w, http.StatusOK, data, nil)
 	if err != nil {
 		a.serverErrorResponse(w, r, err)
+
 	}
 }

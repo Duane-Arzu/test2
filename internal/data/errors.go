@@ -1,3 +1,4 @@
+//internal/data/errors.go
 package data
 
 import (

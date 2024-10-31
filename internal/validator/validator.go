@@ -1,4 +1,8 @@
+// Filename: internal/validator/validator.go
 package validator
+
+import ("slices")
+
 
 // new type named Validator
 type Validator struct {
@@ -30,4 +34,8 @@ func (v *Validator) Check(acceptable bool, key string, message string) {
 	if !acceptable {
 		v.AddError(key, message)
 	}
+}
+
+func PermittedValue(value string, permittedValues ...string) bool {
+	return slices.Contains(permittedValues, value)
 }

@@ -1,3 +1,4 @@
+//cmd/api/middleware.go
 package main
 
 import (
@@ -5,14 +6,14 @@ import (
 	"net/http"
 )
 
-func (a *applicationDependences) recoverPanic(next http.Handler) http.Handler {
+func (a *applicationDependencies) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//defer will be called when the stack unwinds
+		// defer will be called when the stack unwinds
 		defer func() {
-			//recover from panic
+			// recover() checks for panics
 			err := recover()
 			if err != nil {
-				w.Header().Set("Connection", "Close")
+				w.Header().Set("Connection", "close")
 				a.serverErrorResponse(w, r, fmt.Errorf("%s", err))
 			}
 		}()

@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Duane-Arzu/comments/internal/data"
+	"github.com/Duane-Arzu/test1/internal/data"
 	_ "github.com/lib/pq"
 )
 
@@ -30,36 +30,82 @@ type applicationDependences struct {
 	commentModel data.CommentModel
 }
 
+// func main() {
+// 	var settings serverConfig
+// 	flag.IntVar(&settings.port, "port", 4000, "Server Port")
+// 	flag.StringVar(&settings.environment, "env", "development", "Environment(development|staging|production)")
+// 	//read the dsn
+// 	flag.StringVar(&settings.db.dsn, "db-dsn", "postgres://comments:comments@localhost/comments?sslmode=disable", "PostgreSQL DSN")
+// 	flag.Parse()
+
+// 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+// 	//the call to openDB() sets up our connection pool
+// 	db, err := openDB(settings)
+// 	if err != nil {
+// 		logger.Error(err.Error())
+// 		os.Exit(1)
+// 	}
+
+// 	//release the database connection before exiting
+// 	defer db.Close()
+
+// 	logger.Info("Database Connection Pool Established")
+
+// 	appInstance := &applicationDependences{
+// 		config:       settings,
+// 		logger:       logger,
+// 		commentModel: data.CommentModel{DB: db},
+// 	}
+
+// 	apiServer := &http.Server{
+// 		Addr:         fmt.Sprintf(":%d", settings.port),
+// 		Handler:      appInstance.routes(),
+// 		IdleTimeout:  time.Minute,
+// 		ReadTimeout:  5 * time.Second,
+// 		WriteTimeout: 10 * time.Second,
+// 		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
+// 	}
+
+// 	logger.Info("Starting Server", "address", apiServer.Addr, "environment", settings.environment)
+// 	err = apiServer.ListenAndServe()
+// 	if err != nil {
+// 		logger.Error(err.Error())
+// 		os.Exit(1)
+// 	}
+// }
+
 func main() {
-	var settings serverConfig
-	flag.IntVar(&settings.port, "port", 4000, "Server Port")
-	flag.StringVar(&settings.environment, "env", "development", "Environment(development|staging|production)")
-	//read the dsn
-	flag.StringVar(&settings.db.dsn, "db-dsn", "postgres://comments:comments@localhost/comments?sslmode=disable", "PostgreSQL DSN")
+	var setting serverConfig
+
+	flag.IntVar(&setting.port, "port", 4000, "Server port")
+	flag.StringVar(&setting.environment, "env", "development", "Environment (development|staging|production)")
+	flag.StringVar(&setting.db.dsn, "db-dsn", "postgres://testone:testone@localhost/testone?sslmode=disable", "PostgreSQL DSN")
+
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	//the call to openDB() sets up our connection pool
-	db, err := openDB(settings)
+	// the call to openDB() sets up our connection pool
+	db, err := openDB(setting)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error("Database connection failed")
 		os.Exit(1)
 	}
-
-	//release the database connection before exiting
+	// release the database resources before exiting
 	defer db.Close()
 
-	logger.Info("Database Connection Pool Established")
+	logger.Info("Database connection pool established")
 
-	appInstance := &applicationDependences{
-		config:       settings,
+	appInstance := &applicationDependencies{
+		config:       setting,
 		logger:       logger,
-		commentModel: data.CommentModel{DB: db},
+		productModel: data.ProductModel{DB: db},
+		reviewModel:  data.ReviewModel{DB: db},
 	}
 
 	apiServer := &http.Server{
-		Addr:         fmt.Sprintf(":%d", settings.port),
+		Addr:         fmt.Sprintf(":%d", setting.port),
 		Handler:      appInstance.routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  5 * time.Second,
@@ -67,35 +113,39 @@ func main() {
 		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 
-	logger.Info("Starting Server", "address", apiServer.Addr, "environment", settings.environment)
+	logger.Info("Starting server", "address", apiServer.Addr, "environment", setting.environment)
 	err = apiServer.ListenAndServe()
-	if err != nil {
-		logger.Error(err.Error())
-		os.Exit(1)
-	}
+	logger.Error(err.Error())
+	os.Exit(1)
+
 }
 
+
+
+
 func openDB(settings serverConfig) (*sql.DB, error) {
-	//open a connection pool
+	// open a connection pool
 	db, err := sql.Open("postgres", settings.db.dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	//set context to ensure DB operations dont take too long
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-
+	// set a context to ensure DB operations don't take too long
+	ctx, cancel := context.WithTimeout(context.Background(),
+		5*time.Second)
 	defer cancel()
 
-	//pinging connection pool to verify it was created, with a 5-second timeout
+	// let's test if the connection pool was created
+	// we trying pinging it with a 5-second timeout
 	err = db.PingContext(ctx)
 	if err != nil {
 		db.Close()
 		return nil, err
 	}
 
-	//return the connection pool (sql.DB)
+	// return the connection pool (sql.DB)
 	return db, nil
+
 }
 
 //This is the command to push an existing repository from the command line
