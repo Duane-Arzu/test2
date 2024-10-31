@@ -11,8 +11,14 @@ import (
 	"strconv"
 	"strings"
 
+<<<<<<< HEAD
 	"github.com/Duane-Arzu/test1/internal/validator"
 	_ "github.com/Duane-Arzu/test1/internal/validator"
+=======
+	"github.com/Duane-Arzu/comments/internal/data"
+	"github.com/Duane-Arzu/comments/internal/validator"
+	_ "github.com/Duane-Arzu/comments/internal/validator"
+>>>>>>> 0cc1270f48216b9318fcc1ef24b827397488e322
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -41,8 +47,12 @@ func (a *applicationDependencies) writeJSON(w http.ResponseWriter, status int, d
 
 }
 
+<<<<<<< HEAD
 func (a *applicationDependencies) readJSON(w http.ResponseWriter,
 	r *http.Request,
+=======
+func (a *applicationDependencies) readJSON(w http.ResponseWriter, r *http.Request,
+>>>>>>> 0cc1270f48216b9318fcc1ef24b827397488e322
 	destination any) error {
 
 	maxBytes := 256_000
@@ -113,6 +123,7 @@ func (a *applicationDependencies) readJSON(w http.ResponseWriter,
 	return nil
 }
 
+<<<<<<< HEAD
 func (a *applicationDependencies) readIDParam(r *http.Request, paramName string) (int64, error) {
 	params := httprouter.ParamsFromContext(r.Context())
 
@@ -121,6 +132,15 @@ func (a *applicationDependencies) readIDParam(r *http.Request, paramName string)
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil || id < 1 {
 		return 0, errors.New("invalid " + paramName + " parameter")
+=======
+func (a *applicationDependencies) readIDParam(r *http.Request) (int64, error) {
+
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
+	if err != nil || id < 1 {
+		return 0, errors.New("invalid id parameter")
+>>>>>>> 0cc1270f48216b9318fcc1ef24b827397488e322
 	}
 
 	return id, nil
@@ -158,4 +178,109 @@ func (a *applicationDependencies) getSingleIntegerParameter(queryParameters url.
 	}
 
 	return intValue
+<<<<<<< HEAD
 }
+=======
+}
+
+// Write JSON response for a product
+func (a *applicationDependences) writeProductResponse(w http.ResponseWriter, status int, product data.Product) error {
+	return a.writeJSON(w, status, envelope{"product": product}, nil)
+}
+
+// Write JSON response for a list of products
+func (a *applicationDependences) writeProductsResponse(w http.ResponseWriter, status int, products []data.Product) error {
+	return a.writeJSON(w, status, envelope{"products": products}, nil)
+}
+
+// Write JSON response for a review
+func (a *applicationDependences) writeReviewResponse(w http.ResponseWriter, status int, review data.Review) error {
+	return a.writeJSON(w, status, envelope{"review": review}, nil)
+}
+
+// Write JSON response for a list of reviews
+func (a *applicationDependences) writeReviewsResponse(w http.ResponseWriter, status int, reviews []data.Review) error {
+	return a.writeJSON(w, status, envelope{"reviews": reviews}, nil)
+}
+
+func (a *applicationDependences) validateProduct(product data.Product) error {
+	v := validator.New()
+	if product.Name == "" {
+		v.AddError("name", "Name is required.")
+	}
+	if product.Category == "" {
+		v.AddError("category", "Category is required.")
+	}
+	if product.ImageURL == "" {
+		v.AddError("image_url", "Image URL is required.")
+	}
+	if product.AverageRating < 0 || product.AverageRating > 5 {
+		v.AddError("average_rating", "Average rating must be between 0 and 5.")
+	}
+	if !v.Valid() {
+		return fmt.Errorf("validation error: %s", strings.Join(v.Errors, ", "))
+	}
+	return nil
+}
+
+func (a *applicationDependences) validateReview(review data.Review) error {
+	v := validator.New()
+	if review.Rating < 1 || review.Rating > 5 {
+		v.AddError("rating", "Rating must be between 1 and 5.")
+	}
+	if review.ReviewText == "" {
+		v.AddError("review_text", "Review text is required.")
+	}
+	if !v.Valid() {
+		return fmt.Errorf("validation error: %s", strings.Join(v.Errors, ", "))
+	}
+	return nil
+}
+
+// Extract search, filter, sort parameters for products
+func (a *applicationDependences) getProductQueryParams(query url.Values) (string, []string, string) {
+	search := a.getSingleQueryParameter(query, "search", "")
+	filters := a.getMultipleQueryParameters(query, "filter", []string{})
+	sort := a.getSingleQueryParameter(query, "sort", "name")
+	return search, filters, sort
+}
+
+// Extract search, filter, sort parameters for reviews
+func (a *applicationDependences) getReviewQueryParams(query url.Values) (string, []string, string) {
+	search := a.getSingleQueryParameter(query, "search", "")
+	filters := a.getMultipleQueryParameters(query, "filter", []string{})
+	sort := a.getSingleQueryParameter(query, "sort", "rating")
+	return search, filters, sort
+}
+
+func (a *applicationDependences) createProductHandler(w http.ResponseWriter, r *http.Request) {
+	var product data.Product
+
+	// Parse JSON input into product struct
+	if err := a.readJSON(w, r, &product); err != nil {
+		a.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Validate the product data
+	if err := a.validateProduct(product); err != nil {
+		a.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Set default average rating
+	product.AverageRating = 0
+
+	// Add the product to the database (example SQL function, assume it returns product with ID set)
+	newProduct, err := a.commentModel.InsertProduct(product)
+	if err != nil {
+		a.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Send response with the newly created product
+	if err := a.writeProductResponse(w, http.StatusCreated, newProduct); err != nil {
+		a.serverErrorResponse(w, r, err)
+	}
+}
+>>>>>>> 0cc1270f48216b9318fcc1ef24b827397488e322
