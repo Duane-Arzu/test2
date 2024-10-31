@@ -16,7 +16,6 @@ func (a *applicationDependences) routes() http.Handler {
 	//method 404
 	router.NotFound = http.HandlerFunc(a.notFoundResponse)
 
-<<<<<<< HEAD
 	//setup routes for comments
 	// router.HandlerFunc(http.MethodGet, "/v1/healthcheck", a.healthCheckHandler)
 	// router.HandlerFunc(http.MethodPost, "/v1/comments", a.createCommentHandler)
@@ -28,24 +27,12 @@ func (a *applicationDependences) routes() http.Handler {
 
 //routes for Products
 router.HandlerFunc(http.MethodGet, "/v1/healthcheck", a.healthCheckHandler)
-=======
-	//setup routes
-	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", a.healthCheckHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/comments", a.createCommentHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/comments/:id", a.displayCommentHandler)
-	router.HandlerFunc(http.MethodPatch, "/v1/comments/:id", a.updateCommentHandler)
-	router.HandlerFunc(http.MethodDelete, "/v1/comments/:id", a.deleteCommentHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/comments", a.listCommentHandler)
-	// return a.recoverPanic(router)
-//New
->>>>>>> 0cc1270f48216b9318fcc1ef24b827397488e322
 router.HandlerFunc(http.MethodPost, "/v1/products", a.createProductHandler)
 router.HandlerFunc(http.MethodGet, "/v1/products/:id", a.displayProductHandler)
 router.HandlerFunc(http.MethodPatch, "/v1/products/:id", a.updateProductHandler)
 router.HandlerFunc(http.MethodDelete, "/v1/products/:id", a.deleteProductHandler)
 router.HandlerFunc(http.MethodGet, "/v1/products", a.listProductHandler)
 
-<<<<<<< HEAD
 //routes for Reviews
 router.HandlerFunc(http.MethodPost, "/reviews", a.createReviewsHandler)
 router.HandlerFunc(http.MethodGet, "/reviews/:rid", a.displayReviewsHandler)
@@ -60,13 +47,6 @@ router.HandlerFunc(http.MethodPatch, "/helpful-count/:rid", a.HelpfulCountHandle
 
 
 
-=======
-router.HandlerFunc(http.MethodPost, "/v1/products/:id/reviews", a.createReviewHandler)
-router.HandlerFunc(http.MethodGet, "/v1/products/:id/reviews/:reviewId", a.displayReviewHandler)
-router.HandlerFunc(http.MethodPatch, "/v1/products/:id/reviews/:reviewId", a.updateReviewHandler)
-router.HandlerFunc(http.MethodDelete, "/v1/products/:id/reviews/:reviewId", a.deleteReviewHandler)
-router.HandlerFunc(http.MethodGet, "/v1/products/:id/reviews", a.listReviewHandler)
->>>>>>> 0cc1270f48216b9318fcc1ef24b827397488e322
 return a.recoverPanic(router)
 }
 

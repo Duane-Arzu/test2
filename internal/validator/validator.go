@@ -1,16 +1,10 @@
 // Filename: internal/validator/validator.go
 package validator
 
-<<<<<<< HEAD
 import ("slices")
 
 
 // new type named Validator
-=======
-import "slices"
-
-// We will create a new type named Validator
->>>>>>> 0cc1270f48216b9318fcc1ef24b827397488e322
 type Validator struct {
 	Errors map[string]string
 }

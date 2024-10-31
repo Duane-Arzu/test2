@@ -44,7 +44,6 @@ func (a *applicationDependencies) notFoundResponse(w http.ResponseWriter,
 	a.errorResponseJSON(w, r, http.StatusNotFound, message)
 }
 
-<<<<<<< HEAD
 func (a *applicationDependencies) PRIDnotFound(w http.ResponseWriter, r *http.Request, id int64) {
 	message := fmt.Sprintf("Product with id = %d was not found", id)
 	a.errorResponseJSON(w, r, http.StatusNotFound, message)
@@ -61,10 +60,6 @@ func (a *applicationDependencies) PIDnotFound(w http.ResponseWriter, r *http.Req
 }
 func (a *applicationDependencies) RIDnotFound(w http.ResponseWriter, r *http.Request, id int64) {
 	message := fmt.Sprintf("Review with id = %d was already deleted", id)
-=======
-func (a *applicationDependencies) IDnotFound(w http.ResponseWriter, r *http.Request, id int64) {
-	message := fmt.Sprintf("Comment with id = %d was already deleted", id)
->>>>>>> 0cc1270f48216b9318fcc1ef24b827397488e322
 	a.errorResponseJSON(w, r, http.StatusNotFound, message)
 }
 
