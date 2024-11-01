@@ -12,14 +12,14 @@ import (
 )
 
 type Review struct {
-    ReviewID     int64     `json:"review_id"`
-    ProductID    int64     `json:"product_id"`
-    Author       string    `json:"author"`
-    Rating       int64     `json:"rating"`
-    Comment      string    `json:"comment"`
-    HelpfulCount int       `json:"helpful_count"`
-    CreatedAt    time.Time `json:"created_at"`
-    Version      int32     `json:"version"`
+	ReviewID     int64     `json:"review_id"`
+	ProductID    int64     `json:"product_id"`
+	Author       string    `json:"author"`
+	Rating       int64     `json:"rating"`
+	Comment      string    `json:"comment"`
+	HelpfulCount int       `json:"helpful_count"`
+	CreatedAt    time.Time `json:"created_at"`
+	Version      int32     `json:"version"`
 }
 
 type ReviewModel struct {

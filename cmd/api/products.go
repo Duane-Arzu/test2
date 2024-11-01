@@ -5,18 +5,20 @@ import (
 	"fmt"
 	"net/http"
 
-	_"github.com/Duane-Arzu/test1/internal/data"
-	_"github.com/Duane-Arzu/test1/internal/validator"
+	"github.com/Duane-Arzu/test1/internal/data"
+	_ "github.com/Duane-Arzu/test1/internal/data"
+	"github.com/Duane-Arzu/test1/internal/validator"
+	_ "github.com/Duane-Arzu/test1/internal/validator"
 )
 
 // Struct for handling incoming JSON for Product data
 var incomingProductData struct {
-	Name          *string  `json:"name"`
-	Description   *string  `json:"description"`
-	Category      *string  `json:"category"`
-	ImageURL      *string  `json:"image_url"`
-	Price         *string  `json:"price"`
-	AverageRating *float32 `json:"average_rating"`
+	Name        *string  `json:"name"`
+	Description *string  `json:"description"`
+	Category    *string  `json:"category"`
+	ImageURL    *string  `json:"image_url"`
+	Price       *string  `json:"price"`
+	AvgRating   *float32 `json:"avg_rating"`
 }
 
 func (a *applicationDependencies) createProductHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +35,7 @@ func (a *applicationDependencies) createProductHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	product := &data.Product{
+	products := &data.Product{
 		Name:        incomingProductData.Name,
 		Description: incomingProductData.Description,
 		Category:    incomingProductData.Category,
@@ -41,23 +43,23 @@ func (a *applicationDependencies) createProductHandler(w http.ResponseWriter, r 
 		Price:       incomingProductData.Price,
 	}
 	v := validator.New()
-	data.ValidateProduct(v, product)
+	data.ValidateProduct(v, products)
 	if !v.IsEmpty() {
 		a.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	err = a.productModel.InsertProduct(product)
+	err = a.productModel.InsertProduct(products)
 	if err != nil {
 		a.serverErrorResponse(w, r, err)
 		return
 	}
 
 	headers := make(http.Header)
-	headers.Set("Location", fmt.Sprintf("products/%d", product.ProductID))
+	headers.Set("Location", fmt.Sprintf("products/%d", products.ProductID))
 
 	data := envelope{
-		"Product": product,
+		"Product": products,
 	}
 	err = a.writeJSON(w, http.StatusCreated, data, headers)
 	if err != nil {
@@ -72,7 +74,7 @@ func (a *applicationDependencies) displayProductHandler(w http.ResponseWriter, r
 		return
 	}
 
-	product, err := a.productModel.GetProduct(id)
+	products, err := a.productModel.GetProduct(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -84,7 +86,7 @@ func (a *applicationDependencies) displayProductHandler(w http.ResponseWriter, r
 	}
 
 	data := envelope{
-		"Product": product,
+		"Product": products,
 	}
 	err = a.writeJSON(w, http.StatusOK, data, nil)
 	if err != nil {
@@ -99,7 +101,7 @@ func (a *applicationDependencies) updateProductHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	product, err := a.productModel.GetProduct(id)
+	products, err := a.productModel.GetProduct(id)
 	if err != nil {
 		if errors.Is(err, data.ErrRecordNotFound) {
 			a.notFoundResponse(w, r)
@@ -110,13 +112,12 @@ func (a *applicationDependencies) updateProductHandler(w http.ResponseWriter, r 
 	}
 
 	var incomingProductData struct {
-		Name        *string `json:"name"`
-		Description *string `json:"description"`
-		Category    *string `json:"category"`
-		ImageURL    *string `json:"image_url"`
-		Price       *string `json:"price"`
-		//UpdatedAt   *time.Time `json:"updated_at"`
-		// AverageRating *float64   `json:"average_rating"`
+		Name        *string  `json:"name"`
+		Description *string  `json:"description"`
+		Category    *string  `json:"category"`
+		ImageURL    *string  `json:"image_url"`
+		Price       *string  `json:"price"`
+		AvgRating   *float64 `json:"avg_rating"`
 	}
 
 	err = a.readJSON(w, r, &incomingProductData)
@@ -126,42 +127,36 @@ func (a *applicationDependencies) updateProductHandler(w http.ResponseWriter, r 
 	}
 
 	if incomingProductData.Name != nil {
-		product.Name = *incomingProductData.Name
+		products.Name = *incomingProductData.Name
 	}
 	if incomingProductData.Description != nil {
-		product.Description = *incomingProductData.Description
+		products.Description = *incomingProductData.Description
 	}
 	if incomingProductData.Category != nil {
-		product.Category = *incomingProductData.Category
+		products.Category = *incomingProductData.Category
 	}
 	if incomingProductData.ImageURL != nil {
-		product.ImageURL = *incomingProductData.ImageURL
+		products.ImageURL = *incomingProductData.ImageURL
 	}
 	if incomingProductData.Price != nil {
-		product.Price = *incomingProductData.Price
+		products.Price = *incomingProductData.Price
 	}
-	// if incomingProductData.UpdatedAt != nil {
-	// 	product.CreatedAt = *incomingProductData.UpdatedAt
-	// }
-	// if incomingProductData.AverageRating != nil {
-	// 	product.AverageRating = *incomingProductData.AverageRating
-	// }
 
 	v := validator.New()
-	data.ValidateProduct(v, product)
+	data.ValidateProduct(v, products)
 	if !v.IsEmpty() {
 		a.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	err = a.productModel.UpdateProduct(product)
+	err = a.productModel.UpdateProduct(products)
 	if err != nil {
 		a.serverErrorResponse(w, r, err)
 		return
 	}
 
 	data := envelope{
-		"Product": product,
+		"Product": products,
 	}
 	err = a.writeJSON(w, http.StatusOK, data, nil)
 	if err != nil {
@@ -219,7 +214,7 @@ func (a *applicationDependencies) listProductHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	products, metadata, err := a.productModel.GetAllProducts(
+	products, metadata, err := a.productModel.GetAll(
 		queryParametersData.Name,
 		queryParametersData.Category,
 		queryParametersData.Filters,

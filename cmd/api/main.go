@@ -14,22 +14,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const appVersion = "3.0.0"
-
-type serverConfig struct {
-	port        int
-	environment string
-	db          struct {
-		dsn string
-	}
-}
-
-type applicationDependences struct {
-	config       serverConfig
-	logger       *slog.Logger
-	commentModel data.CommentModel
-}
-
 // func main() {
 // 	var settings serverConfig
 // 	flag.IntVar(&settings.port, "port", 4000, "Server Port")
@@ -52,7 +36,7 @@ type applicationDependences struct {
 
 // 	logger.Info("Database Connection Pool Established")
 
-// 	appInstance := &applicationDependences{
+// 	appInstance := &applicationDependencies{
 // 		config:       settings,
 // 		logger:       logger,
 // 		commentModel: data.CommentModel{DB: db},
@@ -75,12 +59,29 @@ type applicationDependences struct {
 // 	}
 // }
 
+const appVersion = "7.0.0"
+
+type serverConfig struct {
+	port        int
+	environment string
+	db          struct {
+		dsn string
+	}
+}
+
+type applicationDependencies struct {
+	config       serverConfig
+	logger       *slog.Logger
+	productModel data.ProductModel
+	reviewModel  data.ReviewModel
+}
+
 func main() {
 	var setting serverConfig
 
 	flag.IntVar(&setting.port, "port", 4000, "Server port")
 	flag.StringVar(&setting.environment, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&setting.db.dsn, "db-dsn", "postgres://testone:testone@localhost/testone?sslmode=disable", "PostgreSQL DSN")
+	flag.StringVar(&setting.db.dsn, "db-dsn", "postgres://product_review_app:Josselyn03@localhost/product_review_app?sslmode=disable", "PostgreSQL DSN")
 
 	flag.Parse()
 
@@ -119,9 +120,6 @@ func main() {
 	os.Exit(1)
 
 }
-
-
-
 
 func openDB(settings serverConfig) (*sql.DB, error) {
 	// open a connection pool

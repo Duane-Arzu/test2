@@ -1,8 +1,9 @@
 // Filename: internal/validator/validator.go
 package validator
 
-import ("slices")
-
+import (
+	"slices"
+)
 
 // new type named Validator
 type Validator struct {

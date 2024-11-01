@@ -4,26 +4,17 @@ package data
 import (
 	"strings"
 
-	"github.com/Duane-Arzu/comments/internal/validator"
-	_ "github.com/Duane-Arzu/comments/internal/validator"
+	"github.com/Duane-Arzu/test1/internal/validator"
+	_ "github.com/Duane-Arzu/test1/internal/validator"
 )
 
 // The Filters type will contain fields related to pagination
 // and eventually the fields related to sorting.
 type Filters struct {
-
-	Page     int // which page number does the client want
-	PageSize int // how records per page
-	Sort     string
+	Page         int // which page number does the client want
+	PageSize     int // how records per page
+	Sort         string
 	SortSafeList []string // allowed sort fields
-}
-
-type Metadata struct {
-	CurrentPage  int `json:"current_page,omitempty"`
-	PageSize     int `json:"page_size,omitempty"`
-	FirstPage    int `json:"first_page,omitempty"`
-	LastPage     int `json:"last_page,omitempty"`
-	TotalRecords int `json:"total_records,omitempty"`
 }
 
 type Metadata struct {
@@ -61,11 +52,11 @@ func (f Filters) sortDirection() string {
 	return "ASC"
 }
 
-
 // calculate how many records to send back
 func (f Filters) limit() int {
 	return f.PageSize
 }
+
 // calculate the offset so that we remember how many records have
 // been sent and how many remain to be sent
 func (f Filters) offset() int {

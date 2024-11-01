@@ -6,30 +6,30 @@ import (
 	"net/http"
 	"time"
 
-	
-	_"github.com/Duane-Arzu/test1/internal/data"
-	_"github.com/Duane-Arzu/test1/internal/validator"
+	"github.com/Duane-Arzu/test1/internal/data"
+	_ "github.com/Duane-Arzu/test1/internal/data"
+	"github.com/Duane-Arzu/test1/internal/validator"
+	_ "github.com/Duane-Arzu/test1/internal/validator"
 )
 
 // Struct to hold incoming review data
 var incomingReviewData struct {
-	ProductID    *int64  `json:"product_id"` 
+	ProductID    *int64  `json:"product_id"`
 	Author       *string `json:"author"`
-	Rating       *int64  `json:"rating"` 
+	Rating       *int64  `json:"rating"`
 	HelpfulCount *int32  `json:"helpful_count"`
-	Comment   	 *string `json:"comment"`
-
+	Comment      *string `json:"comment"`
 }
 
 // Updated createReviewHandler with product existence check
-func (a *applicationDependencies) createReviewHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) createReviewsHandler(w http.ResponseWriter, r *http.Request) {
 	// Create a local instance of incomingReviewData
 	var incomingReviewData struct {
-		ProductID    *int64  `json:"product_id"` 
+		ProductID    *int64  `json:"product_id"`
 		Author       *string `json:"author"`
-		Rating       *int64  `json:"rating"` 
+		Rating       *int64  `json:"rating"`
 		HelpfulCount *int32  `json:"helpful_count"`
-		Comment   *string `json:"comment"` 
+		Comment      *string `json:"comment"`
 	}
 
 	// Decode the incoming JSON into the struct
@@ -65,8 +65,8 @@ func (a *applicationDependencies) createReviewHandler(w http.ResponseWriter, r *
 		ProductID:    int64(*incomingReviewData.ProductID),
 		Author:       *incomingReviewData.Author,
 		Rating:       int64(*incomingReviewData.Rating),
-		Comment:   *incomingReviewData.Comment,
-		HelpfulCount: int32(*incomingReviewData.HelpfulCount),
+		Comment:      *incomingReviewData.Comment,
+		HelpfulCount: int(*incomingReviewData.HelpfulCount),
 		CreatedAt:    time.Now(),
 	}
 
@@ -101,7 +101,7 @@ func (a *applicationDependencies) createReviewHandler(w http.ResponseWriter, r *
 	}
 }
 
-func (a *applicationDependencies) displayReviewHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) displayReviewsHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the id from the URL /v1/comments/:id so that we
 	// can use it to query teh comments table. We will
 	// implement the readIDParam() function later
@@ -135,7 +135,7 @@ func (a *applicationDependencies) displayReviewHandler(w http.ResponseWriter, r 
 
 }
 
-func (a *applicationDependencies) updateReviewHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) updateReviewsHandler(w http.ResponseWriter, r *http.Request) {
 	// reads the review ID from the URL parameter
 	id, err := a.readIDParam(r, "revid")
 	if err != nil {
@@ -156,9 +156,9 @@ func (a *applicationDependencies) updateReviewHandler(w http.ResponseWriter, r *
 
 	// defines a struct to hold incoming JSON data
 	var incomingReviewData struct {
-		Author     *string `json:"author"`
-		Rating     *int64  `json:"rating"`     
-		Comment *string `json:"comment"` 
+		Author  *string `json:"author"`
+		Rating  *int64  `json:"rating"`
+		Comment *string `json:"comment"`
 	}
 
 	// decodes the incoming JSON into the struct
@@ -204,7 +204,7 @@ func (a *applicationDependencies) updateReviewHandler(w http.ResponseWriter, r *
 	}
 }
 
-func (a *applicationDependencies) deleteReviewHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) deleteReviewsHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := a.readIDParam(r, "revid")
 	if err != nil {
 		a.notFoundResponse(w, r)
@@ -215,7 +215,7 @@ func (a *applicationDependencies) deleteReviewHandler(w http.ResponseWriter, r *
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			a.REVIDnotFound(w, r, id) // Pass the ID to the custom message handler
+			a.RIDnotFound(w, r, id) // Pass the ID to the custom message handler
 		default:
 			a.serverErrorResponse(w, r, err)
 		}
@@ -231,7 +231,7 @@ func (a *applicationDependencies) deleteReviewHandler(w http.ResponseWriter, r *
 	}
 }
 
-func (a *applicationDependencies) listReviewHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) listReviewsHandler(w http.ResponseWriter, r *http.Request) {
 	var queryParametersData struct {
 		Author string
 		data.Filters
@@ -277,7 +277,7 @@ func (a *applicationDependencies) listReviewHandler(w http.ResponseWriter, r *ht
 	}
 }
 
-func (a *applicationDependencies) listProductReviewHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) listProductReviewsHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the id from the URL /v1/comments/:id so that we
 	// can use it to query teh comments table. We will
 	// implement the readIDParam() function later
@@ -362,7 +362,7 @@ func (a *applicationDependencies) HelpfulCountHandler(w http.ResponseWriter, r *
 	fmt.Fprintln(w, confirmationMessage)
 }
 
-func (a *applicationDependencies) getProductReviewHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) getProductReviewsHandler(w http.ResponseWriter, r *http.Request) {
 	// Read the product ID from the request
 	id, err := a.readIDParam(r, "id")
 	if err != nil {

@@ -43,21 +43,21 @@ type ProductModel struct {
 // }
 
 // Validation function for Product struct
-func ValidateProduct(v *validator.Validator, product *Product) {
-	v.Check(product.Name != "", "name", "this is required")
-	v.Check(len(product.Name) <= 100, "name", "cannot be more than 100 characters long")
-	v.Check(product.Description != "", "description", "this is required")
-	v.Check(len(product.Description) <= 500, "description", "cannot be more than 500 characters long")
-	v.Check(product.Category != "", "category", "this is required")
-	v.Check(product.ImageURL != "", "image_url", "this is required")
-	v.Check(len(product.ImageURL) <= 255, "image_url", "cannot be more than 255 characters long")
-	v.Check(len(product.Price) <= 10, "price", "cannot be more than 10 characters long")
-	v.Check(product.Description != "", "description", "this is required")
+func ValidateProduct(v *validator.Validator, products *Product) {
+	v.Check(products.Name != "", "name", "this is required")
+	v.Check(len(products.Name) <= 100, "name", "cannot be more than 100 characters long")
+	v.Check(products.Description != "", "description", "this is required")
+	v.Check(len(products.Description) <= 500, "description", "cannot be more than 500 characters long")
+	v.Check(products.Category != "", "category", "this is required")
+	v.Check(products.ImageURL != "", "image_url", "this is required")
+	v.Check(len(products.ImageURL) <= 255, "image_url", "cannot be more than 255 characters long")
+	v.Check(len(products.Price) <= 10, "price", "cannot be more than 10 characters long")
+	v.Check(products.Description != "", "description", "this is required")
 }
 
 // // Insert Row to comments table
 // // expects a pointer to the actual comment content
-func (p ProductModel) InsertProduct(product *Product) error {
+func (p ProductModel) InsertProduct(products *Product) error {
     //the sql query to be executed against the database table
 	query := `
 		INSERT INTO products (name, description, category, image_url, price)
@@ -65,7 +65,7 @@ func (p ProductModel) InsertProduct(product *Product) error {
 		RETURNING product_id, created_at, version
 	`
     //the actual values to be passed into $1, $2, $3, $4 and $5
-	args := []any{product.Name, product.Description, product.Category, product.ImageURL, product.Price}
+	args := []any{products.Name, products.Description, products.Category, products.ImageURL, products.Price}
 
 
  	// Create a context with a 3-second timeout. No database
@@ -74,9 +74,9 @@ func (p ProductModel) InsertProduct(product *Product) error {
 	defer cancel()
 
 	return p.DB.QueryRowContext(ctx, query, args...).Scan(
-		&product.ProductID,
-		&product.CreatedAt,
-		&product.Version,
+		&products.ProductID,
+		&products.CreatedAt,
+		&products.Version,
 	)
 }
 
@@ -89,25 +89,25 @@ func (p ProductModel) GetProduct(id int64) (*Product, error) {
 
     //the sql query to be excecuted against the database table
 	query := `
-		SELECT product_id, name, description, category, image_url, price, average_rating, created_at, version
+		SELECT product_id, name, description, category, image_url, price, avg_rating, created_at, version
 		FROM products
 		WHERE product_id = $1
 	`
 
-	var product Product
+	var products Product
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	err := p.DB.QueryRowContext(ctx, query, id).Scan(
-		&product.ProductID,
-		&product.Name,
-		&product.Description,
-		&product.Category,
-		&product.ImageURL,
-		&product.Price,
-		&product.AverageRating,
-		&product.CreatedAt,
-		&product.Version,
+		&products.ProductID,
+		&products.Name,
+		&products.Description,
+		&products.Category,
+		&products.ImageURL,
+		&products.Price,
+		&products.AvgRating,
+		&products.CreatedAt,
+		&products.Version,
 	)
 
 	if err != nil {
@@ -117,24 +117,24 @@ func (p ProductModel) GetProduct(id int64) (*Product, error) {
 		return nil, err
 	}
 
-	return &product, nil
+	return &products, nil
 }
 
-func (p ProductModel) UpdateProduct(product *Product) error {
+func (p ProductModel) UpdateProduct(products *Product) error {
 	query := `
 		UPDATE products
-		SET name = $1, description = $2, category = $3, image_url = $4, price = $5, average_rating = $6, version = version + 1
+		SET name = $1, description = $2, category = $3, image_url = $4, price = $5, avg_rating = $6, version = version + 1
 		WHERE product_id = $7
 		RETURNING version
 	`
 
 	// Removed `product.UpdatedAt` from the args slice
-	args := []any{product.Name, product.Description, product.Category, product.ImageURL, product.Price, product.AverageRating, product.ProductID}
+	args := []any{products.Name, products.Description, products.Category, products.ImageURL, products.Price, products.AvgRating, products.ProductID}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	return p.DB.QueryRowContext(ctx, query, args...).Scan(&product.Version)
+	return p.DB.QueryRowContext(ctx, query, args...).Scan(&products.Version)
 }
 
 func (p ProductModel) DeleteProduct(id int64) error {
@@ -169,7 +169,7 @@ func (p ProductModel) DeleteProduct(id int64) error {
 
 func (p ProductModel) GetAll(name string, category string, filters Filters) ([]*Product, Metadata, error) {
 	query := fmt.Sprintf(`
-		SELECT COUNT(*) OVER(), product_id, name, description, category, image_url, price, average_rating, created_at, version
+		SELECT COUNT(*) OVER(), product_id, name, description, category, image_url, price, avg_rating, created_at, version
 		FROM products
 		WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '') 
 		AND (to_tsvector('simple', category) @@ plainto_tsquery('simple', $2) OR $2 = '') 
@@ -198,7 +198,7 @@ func (p ProductModel) GetAll(name string, category string, filters Filters) ([]*
 			&product.Category,
 			&product.ImageURL,
 			&product.Price,
-			&product.AverageRating,
+			&product.AvgRating,
 			&product.CreatedAt,
 			&product.Version,
 		)

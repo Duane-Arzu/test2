@@ -1,4 +1,4 @@
-//cmd/api/healthcheck.go
+// cmd/api/healthcheck.go
 package main
 
 import (
