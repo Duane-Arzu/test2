@@ -28,7 +28,7 @@ type ReviewModel struct {
 
 func ValidateReview(v *validator.Validator, review *Review) {
 	v.Check(review.Author != "", "author", "must be provided")
-	v.Check(review.ReviewText != "", "review_text", "must be provided")
+	v.Check(review.Comment != "", "comment", "must be provided")
 
 	v.Check(len(review.Author) <= 25, "author", "must not be more than 25 bytes long")
 	v.Check(review.ProductID > 0, "product_id", "must be a positive integer")
@@ -41,7 +41,7 @@ func (c ReviewModel) InsertReview(review *Review) error {
 		VALUES ($1, $2, $3, $4, COALESCE($5, 0))
 		RETURNING review_id, created_at, version
 	`
-	args := []any{review.ProductID, review.Author, review.Rating, review.ReviewText, review.HelpfulCount}
+	args := []any{review.ProductID, review.Author, review.Rating, review.Comment, review.HelpfulCount}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -70,7 +70,7 @@ func (c ReviewModel) GetReview(id int64) (*Review, error) {
 		&review.ProductID,
 		&review.Author,
 		&review.Rating,
-		&review.ReviewText,
+		&review.Comment,
 		&review.HelpfulCount,
 		&review.CreatedAt,
 		&review.Version,
@@ -92,7 +92,7 @@ func (c ReviewModel) UpdateReview(review *Review) error {
 		RETURNING version
 	`
 
-	args := []any{review.Author, review.Rating, review.ReviewText, review.ReviewID}
+	args := []any{review.Author, review.Rating, review.Comment, review.ReviewID}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -154,7 +154,7 @@ func (c ReviewModel) GetAllReviews(author string, filters Filters) ([]*Review, M
 	// Iterate over result rows and scan data into Review struct
 	for rows.Next() {
 		var review Review
-		if err := rows.Scan(&totalRecords, &review.ReviewID, &review.ProductID, &review.Author, &review.Rating, &review.ReviewText, &review.HelpfulCount, &review.CreatedAt, &review.Version); err != nil {
+		if err := rows.Scan(&totalRecords, &review.ReviewID, &review.ProductID, &review.Author, &review.Rating, &review.Comment, &review.HelpfulCount, &review.CreatedAt, &review.Version); err != nil {
 			return nil, Metadata{}, err
 		}
 		reviews = append(reviews, &review)
@@ -203,7 +203,7 @@ func (c ReviewModel) GetAllProductReviews(productID int64) ([]Review, error) {
 			&review.ReviewID,
 			&review.Author,
 			&review.Rating,
-			&review.ReviewText,
+			&review.Comment,
 			&review.HelpfulCount,
 			&review.CreatedAt,
 			&review.Version,
@@ -239,7 +239,7 @@ func (c *ReviewModel) UpdateHelpfulCount(id int64) (*Review, error) {
 		&review.ReviewID,
 		&review.Author,
 		&review.Rating,
-		&review.ReviewText,
+		&review.Comment,
 		&review.HelpfulCount,
 		&review.Version,
 	)
@@ -290,7 +290,7 @@ func (c ReviewModel) GetProductReview(rid int64, pid int64) (*Review, error) {
 		&review.ProductID,
 		&review.Author,
 		&review.Rating,
-		&review.ReviewText,
+		&review.Comment,
 		&review.HelpfulCount,
 		&review.CreatedAt,
 		&review.Version,

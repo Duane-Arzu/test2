@@ -65,7 +65,7 @@ func (a *applicationDependencies) createReviewHandler(w http.ResponseWriter, r *
 		ProductID:    int64(*incomingReviewData.ProductID),
 		Author:       *incomingReviewData.Author,
 		Rating:       int64(*incomingReviewData.Rating),
-		ReviewText:   *incomingReviewData.ReviewText,
+		Comment:   *incomingReviewData.Comment,
 		HelpfulCount: int32(*incomingReviewData.HelpfulCount),
 		CreatedAt:    time.Now(),
 	}
@@ -111,7 +111,7 @@ func (a *applicationDependencies) displayReviewHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	// Call Get() to retrieve the comment with the specified id
+	// call Get() to retrieve the comment with the specified id
 	review, err := a.reviewModel.GetReview(id)
 	if err != nil {
 		switch {
@@ -136,14 +136,14 @@ func (a *applicationDependencies) displayReviewHandler(w http.ResponseWriter, r 
 }
 
 func (a *applicationDependencies) updateReviewHandler(w http.ResponseWriter, r *http.Request) {
-	// Read the review ID from the URL parameter
+	// reads the review ID from the URL parameter
 	id, err := a.readIDParam(r, "revid")
 	if err != nil {
 		a.notFoundResponse(w, r)
 		return
 	}
 
-	// Retrieve the review from the database
+	// retrieves the review from the database
 	review, err := a.reviewModel.GetReview(id)
 	if err != nil {
 		if errors.Is(err, data.ErrRecordNotFound) {
@@ -154,47 +154,47 @@ func (a *applicationDependencies) updateReviewHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	// Define a struct to hold incoming JSON data
+	// defines a struct to hold incoming JSON data
 	var incomingReviewData struct {
 		Author     *string `json:"author"`
-		Rating     *int64  `json:"rating"`      // integer with a constraint (1-5)
-		ReviewText *string `json:"review_text"` // non-null text field
+		Rating     *int64  `json:"rating"`     
+		Comment *string `json:"comment"` 
 	}
 
-	// Decode the incoming JSON into the struct
+	// decodes the incoming JSON into the struct
 	err = a.readJSON(w, r, &incomingReviewData)
 	if err != nil {
 		a.badRequestResponse(w, r, err)
 		return
 	}
 
-	// Update the fields if provided in the incoming JSON
+	// updates the fields if provided in the incoming JSON
 	if incomingReviewData.Author != nil {
 		review.Author = *incomingReviewData.Author
 	}
 	if incomingReviewData.Rating != nil {
 		review.Rating = *incomingReviewData.Rating
 	}
-	if incomingReviewData.ReviewText != nil {
-		review.ReviewText = *incomingReviewData.ReviewText
+	if incomingReviewData.Comment != nil {
+		review.Comment = *incomingReviewData.Comment
 	}
 
-	// Validate the updated review
+	// validate the updated review
 	v := validator.New()
-	data.ValidateReview(v, review) // Assuming ValidateReview is the correct validation function for reviews
+	data.ValidateReview(v, review) // assuming ValidateReview is the correct validation function for reviews
 	if !v.IsEmpty() {
 		a.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	// Update the review in the database
+	// update the review in the database
 	err = a.reviewModel.UpdateReview(review)
 	if err != nil {
 		a.serverErrorResponse(w, r, err)
 		return
 	}
 
-	// Send the updated review as a JSON response
+	// sends the updated review as a JSON response
 	data := envelope{
 		"review": review,
 	}
