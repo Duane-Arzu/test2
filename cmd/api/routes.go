@@ -7,42 +7,32 @@ import (
 )
 
 func (a *applicationDependencies) routes() http.Handler {
-	//setup a new router
+
 	router := httprouter.New()
 
-	//handle 405
-	router.MethodNotAllowed = http.HandlerFunc(a.methodNotAllowedResponse)
-
-	//method 404
 	router.NotFound = http.HandlerFunc(a.notFoundResponse)
 
-	//setup routes for comments
-	// router.HandlerFunc(http.MethodGet, "/v1/healthcheck", a.healthCheckHandler)
-	// router.HandlerFunc(http.MethodPost, "/v1/comments", a.createCommentHandler)
-	// router.HandlerFunc(http.MethodGet, "/v1/comments/:id", a.displayCommentHandler)
-	// router.HandlerFunc(http.MethodPatch, "/v1/comments/:id", a.updateCommentHandler)
-	// router.HandlerFunc(http.MethodDelete, "/v1/comments/:id", a.deleteCommentHandler)
-	// router.HandlerFunc(http.MethodGet, "/v1/comments", a.listCommentHandler)
-	// return a.recoverPanic(router)
+	router.MethodNotAllowed = http.HandlerFunc(a.methodNotAllowedResponse)
 
-	//routes for Products
-	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", a.healthCheckHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/products", a.createProductHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/products/:id", a.displayProductHandler)
-	router.HandlerFunc(http.MethodPatch, "/v1/products/:id", a.updateProductHandler)
-	router.HandlerFunc(http.MethodDelete, "/v1/products/:id", a.deleteProductHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/products", a.listProductHandler)
+	//Product part
+	router.HandlerFunc(http.MethodGet, "/healthcheck", a.healthcheckHandler)
+	router.HandlerFunc(http.MethodGet, "/product", a.listProductHandler)
+	router.HandlerFunc(http.MethodPost, "/product", a.createProductHandler)
+	router.HandlerFunc(http.MethodGet, "/product/:pid", a.displayProductHandler)
+	router.HandlerFunc(http.MethodPatch, "/product/:pid", a.updateProductHandler)
+	router.HandlerFunc(http.MethodDelete, "/product/:pid", a.deleteProductHandler)
 
-	//routes for Reviews
-	router.HandlerFunc(http.MethodPost, "/reviews", a.createReviewsHandler)
-	router.HandlerFunc(http.MethodGet, "/reviews/:rid", a.displayReviewsHandler)
-	router.HandlerFunc(http.MethodPatch, "/reviews/:rid", a.updateReviewsHandler)
-	router.HandlerFunc(http.MethodDelete, "/reviews/:rid", a.deleteReviewsHandler)
-	router.HandlerFunc(http.MethodGet, "/reviews", a.listReviewsHandler)
+	// //Review part
+	router.HandlerFunc(http.MethodGet, "/review", a.listReviewHandler)
+	router.HandlerFunc(http.MethodPost, "/review", a.createReviewHandler)
+	router.HandlerFunc(http.MethodGet, "/review/:rid", a.displayReviewHandler)
+	router.HandlerFunc(http.MethodPatch, "/review/:rid", a.updateReviewHandler)
+	router.HandlerFunc(http.MethodDelete, "/review/:rid", a.deleteReviewHandler)
 
-	router.HandlerFunc(http.MethodGet, "/product-reviews/:rid", a.listProductReviewsHandler)
-	router.HandlerFunc(http.MethodGet, "/product/:id/reviews/:rid", a.getProductReviewsHandler)
+	router.HandlerFunc(http.MethodGet, "/product-review/:rid", a.listProductReviewHandler)
+	router.HandlerFunc(http.MethodGet, "/product/:pid/review/:rid", a.getProductReviewHandler)
 	router.HandlerFunc(http.MethodPatch, "/helpful-count/:rid", a.HelpfulCountHandler)
 
-	return a.recoverPanic(router)
+	return a.recoverPanic(a.rateLimit(router))
+
 }

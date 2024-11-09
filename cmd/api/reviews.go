@@ -6,30 +6,31 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Duane-Arzu/test1/internal/data"
-	_ "github.com/Duane-Arzu/test1/internal/data"
-	"github.com/Duane-Arzu/test1/internal/validator"
-	_ "github.com/Duane-Arzu/test1/internal/validator"
+	"github.com/Duane-Arzu/test2/internal/data"
+	_ "github.com/Duane-Arzu/test2/internal/data"
+	"github.com/Duane-Arzu/test2/internal/validator"
+	_ "github.com/Duane-Arzu/test2/internal/validator"
 )
 
 // Struct to hold incoming review data
 var incomingReviewData struct {
-	ProductID    *int64  `json:"product_id"`
+	ProductID    *int64  `json:"product_id"` // foreign key referencing products
 	Author       *string `json:"author"`
-	Rating       *int64  `json:"rating"`
+	Rating       *int64  `json:"rating"` // integer with a constraint (1-5)
 	HelpfulCount *int32  `json:"helpful_count"`
-	Comment      *string `json:"comment"`
+	ReviewText   *string `json:"review_text"` // non-null text field
+
 }
 
 // Updated createReviewHandler with product existence check
-func (a *applicationDependencies) createReviewsHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) createReviewHandler(w http.ResponseWriter, r *http.Request) {
 	// Create a local instance of incomingReviewData
 	var incomingReviewData struct {
-		ProductID    *int64  `json:"product_id"`
+		ProductID    *int64  `json:"product_id"` // foreign key referencing products
 		Author       *string `json:"author"`
-		Rating       *int64  `json:"rating"`
+		Rating       *int64  `json:"rating"` // integer with a constraint (1-5)
 		HelpfulCount *int32  `json:"helpful_count"`
-		Comment      *string `json:"comment"`
+		ReviewText   *string `json:"review_text"` // non-null text field
 	}
 
 	// Decode the incoming JSON into the struct
@@ -65,8 +66,8 @@ func (a *applicationDependencies) createReviewsHandler(w http.ResponseWriter, r 
 		ProductID:    int64(*incomingReviewData.ProductID),
 		Author:       *incomingReviewData.Author,
 		Rating:       int64(*incomingReviewData.Rating),
-		Comment:      *incomingReviewData.Comment,
-		HelpfulCount: int(*incomingReviewData.HelpfulCount),
+		ReviewText:   *incomingReviewData.ReviewText,
+		HelpfulCount: int32(*incomingReviewData.HelpfulCount),
 		CreatedAt:    time.Now(),
 	}
 
@@ -101,17 +102,17 @@ func (a *applicationDependencies) createReviewsHandler(w http.ResponseWriter, r 
 	}
 }
 
-func (a *applicationDependencies) displayReviewsHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) displayReviewHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the id from the URL /v1/comments/:id so that we
 	// can use it to query teh comments table. We will
 	// implement the readIDParam() function later
-	id, err := a.readIDParam(r, "revid")
+	id, err := a.readIDParam(r, "rid")
 	if err != nil {
 		a.notFoundResponse(w, r)
 		return
 	}
 
-	// call Get() to retrieve the comment with the specified id
+	// Call Get() to retrieve the comment with the specified id
 	review, err := a.reviewModel.GetReview(id)
 	if err != nil {
 		switch {
@@ -135,15 +136,15 @@ func (a *applicationDependencies) displayReviewsHandler(w http.ResponseWriter, r
 
 }
 
-func (a *applicationDependencies) updateReviewsHandler(w http.ResponseWriter, r *http.Request) {
-	// reads the review ID from the URL parameter
-	id, err := a.readIDParam(r, "revid")
+func (a *applicationDependencies) updateReviewHandler(w http.ResponseWriter, r *http.Request) {
+	// Read the review ID from the URL parameter
+	id, err := a.readIDParam(r, "rid")
 	if err != nil {
 		a.notFoundResponse(w, r)
 		return
 	}
 
-	// retrieves the review from the database
+	// Retrieve the review from the database
 	review, err := a.reviewModel.GetReview(id)
 	if err != nil {
 		if errors.Is(err, data.ErrRecordNotFound) {
@@ -154,47 +155,47 @@ func (a *applicationDependencies) updateReviewsHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	// defines a struct to hold incoming JSON data
+	// Define a struct to hold incoming JSON data
 	var incomingReviewData struct {
-		Author  *string `json:"author"`
-		Rating  *int64  `json:"rating"`
-		Comment *string `json:"comment"`
+		Author     *string `json:"author"`
+		Rating     *int64  `json:"rating"`      // integer with a constraint (1-5)
+		ReviewText *string `json:"review_text"` // non-null text field
 	}
 
-	// decodes the incoming JSON into the struct
+	// Decode the incoming JSON into the struct
 	err = a.readJSON(w, r, &incomingReviewData)
 	if err != nil {
 		a.badRequestResponse(w, r, err)
 		return
 	}
 
-	// updates the fields if provided in the incoming JSON
+	// Update the fields if provided in the incoming JSON
 	if incomingReviewData.Author != nil {
 		review.Author = *incomingReviewData.Author
 	}
 	if incomingReviewData.Rating != nil {
 		review.Rating = *incomingReviewData.Rating
 	}
-	if incomingReviewData.Comment != nil {
-		review.Comment = *incomingReviewData.Comment
+	if incomingReviewData.ReviewText != nil {
+		review.ReviewText = *incomingReviewData.ReviewText
 	}
 
-	// validate the updated review
+	// Validate the updated review
 	v := validator.New()
-	data.ValidateReview(v, review) // assuming ValidateReview is the correct validation function for reviews
+	data.ValidateReview(v, review) // Assuming ValidateReview is the correct validation function for reviews
 	if !v.IsEmpty() {
 		a.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	// update the review in the database
+	// Update the review in the database
 	err = a.reviewModel.UpdateReview(review)
 	if err != nil {
 		a.serverErrorResponse(w, r, err)
 		return
 	}
 
-	// sends the updated review as a JSON response
+	// Send the updated review as a JSON response
 	data := envelope{
 		"review": review,
 	}
@@ -204,8 +205,8 @@ func (a *applicationDependencies) updateReviewsHandler(w http.ResponseWriter, r 
 	}
 }
 
-func (a *applicationDependencies) deleteReviewsHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := a.readIDParam(r, "revid")
+func (a *applicationDependencies) deleteReviewHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := a.readIDParam(r, "rid")
 	if err != nil {
 		a.notFoundResponse(w, r)
 		return
@@ -231,7 +232,7 @@ func (a *applicationDependencies) deleteReviewsHandler(w http.ResponseWriter, r 
 	}
 }
 
-func (a *applicationDependencies) listReviewsHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) listReviewHandler(w http.ResponseWriter, r *http.Request) {
 	var queryParametersData struct {
 		Author string
 		data.Filters
@@ -277,11 +278,11 @@ func (a *applicationDependencies) listReviewsHandler(w http.ResponseWriter, r *h
 	}
 }
 
-func (a *applicationDependencies) listProductReviewsHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) listProductReviewHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the id from the URL /v1/comments/:id so that we
 	// can use it to query teh comments table. We will
 	// implement the readIDParam() function later
-	id, err := a.readIDParam(r, "revid")
+	id, err := a.readIDParam(r, "rid")
 	if err != nil {
 		a.notFoundResponse(w, r)
 		return
@@ -324,7 +325,7 @@ func (a *applicationDependencies) listProductReviewsHandler(w http.ResponseWrite
 
 func (a *applicationDependencies) HelpfulCountHandler(w http.ResponseWriter, r *http.Request) {
 	// Read the review ID from the URL parameter
-	id, err := a.readIDParam(r, "revid")
+	id, err := a.readIDParam(r, "rid")
 	if err != nil {
 		a.notFoundResponse(w, r)
 		return
@@ -362,23 +363,23 @@ func (a *applicationDependencies) HelpfulCountHandler(w http.ResponseWriter, r *
 	fmt.Fprintln(w, confirmationMessage)
 }
 
-func (a *applicationDependencies) getProductReviewsHandler(w http.ResponseWriter, r *http.Request) {
+func (a *applicationDependencies) getProductReviewHandler(w http.ResponseWriter, r *http.Request) {
 	// Read the product ID from the request
-	id, err := a.readIDParam(r, "id")
+	pid, err := a.readIDParam(r, "pid")
 	if err != nil {
 		a.notFoundResponse(w, r)
 		return
 	}
 
 	// Read the review ID from the request
-	revid, err := a.readIDParam(r, "revid")
+	rid, err := a.readIDParam(r, "rid")
 	if err != nil {
 		a.notFoundResponse(w, r)
 		return
 	}
 
 	// Retrieve the review from the model using the new GetProductReview function
-	review, err := a.reviewModel.GetProductReview(revid, id)
+	review, err := a.reviewModel.GetProductReview(rid, pid)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):

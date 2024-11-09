@@ -4,68 +4,26 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"time"
 
-	"github.com/Duane-Arzu/test1/internal/data"
+	"github.com/Duane-Arzu/test2/internal/data"
 	_ "github.com/lib/pq"
 )
 
-// func main() {
-// 	var settings serverConfig
-// 	flag.IntVar(&settings.port, "port", 4000, "Server Port")
-// 	flag.StringVar(&settings.environment, "env", "development", "Environment(development|staging|production)")
-// 	//read the dsn
-// 	flag.StringVar(&settings.db.dsn, "db-dsn", "postgres://comments:comments@localhost/comments?sslmode=disable", "PostgreSQL DSN")
-// 	flag.Parse()
-
-// 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-
-// 	//the call to openDB() sets up our connection pool
-// 	db, err := openDB(settings)
-// 	if err != nil {
-// 		logger.Error(err.Error())
-// 		os.Exit(1)
-// 	}
-
-// 	//release the database connection before exiting
-// 	defer db.Close()
-
-// 	logger.Info("Database Connection Pool Established")
-
-// 	appInstance := &applicationDependencies{
-// 		config:       settings,
-// 		logger:       logger,
-// 		commentModel: data.CommentModel{DB: db},
-// 	}
-
-// 	apiServer := &http.Server{
-// 		Addr:         fmt.Sprintf(":%d", settings.port),
-// 		Handler:      appInstance.routes(),
-// 		IdleTimeout:  time.Minute,
-// 		ReadTimeout:  5 * time.Second,
-// 		WriteTimeout: 10 * time.Second,
-// 		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
-// 	}
-
-// 	logger.Info("Starting Server", "address", apiServer.Addr, "environment", settings.environment)
-// 	err = apiServer.ListenAndServe()
-// 	if err != nil {
-// 		logger.Error(err.Error())
-// 		os.Exit(1)
-// 	}
-// }
-
-const appVersion = "7.0.0"
+const appVersion = "8.0.0"
 
 type serverConfig struct {
 	port        int
 	environment string
 	db          struct {
 		dsn string
+	}
+	limiter struct {
+		rps     float64
+		burst   int
+		enabled bool
 	}
 }
 
@@ -81,7 +39,13 @@ func main() {
 
 	flag.IntVar(&setting.port, "port", 4000, "Server port")
 	flag.StringVar(&setting.environment, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&setting.db.dsn, "db-dsn", "postgres://product_review_app:Josselyn03@localhost/product_review_app?sslmode=disable", "PostgreSQL DSN")
+	flag.StringVar(&setting.db.dsn, "db-dsn", "postgres://products:darzu12@localhost/products?sslmode=disable", "PostgreSQL DSN")
+
+	flag.Float64Var(&setting.limiter.rps, "limiter-rps", 2, "Rate Limiter maximum requests per second")
+
+	flag.IntVar(&setting.limiter.burst, "limiter-burst", 5, "Rate Limiter maximum burst")
+
+	flag.BoolVar(&setting.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
 
 	flag.Parse()
 
@@ -105,20 +69,11 @@ func main() {
 		reviewModel:  data.ReviewModel{DB: db},
 	}
 
-	apiServer := &http.Server{
-		Addr:         fmt.Sprintf(":%d", setting.port),
-		Handler:      appInstance.routes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
+	err = appInstance.serve()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
-
-	logger.Info("Starting server", "address", apiServer.Addr, "environment", setting.environment)
-	err = apiServer.ListenAndServe()
-	logger.Error(err.Error())
-	os.Exit(1)
-
 }
 
 func openDB(settings serverConfig) (*sql.DB, error) {
@@ -145,10 +100,3 @@ func openDB(settings serverConfig) (*sql.DB, error) {
 	return db, nil
 
 }
-
-//This is the command to push an existing repository from the command line
-// git remote add origin https://github.com/Duane-Arzu/flower.git
-// git branch -M main
-// git push -u origin main
-
-//hello

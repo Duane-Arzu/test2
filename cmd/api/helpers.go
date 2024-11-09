@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Duane-Arzu/test1/internal/validator"
-	_ "github.com/Duane-Arzu/test1/internal/validator"
+	"github.com/Duane-Arzu/test2/internal/validator"
+	_ "github.com/Duane-Arzu/test2/internal/validator"
 	"github.com/julienschmidt/httprouter"
 )
 

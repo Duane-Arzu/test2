@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (a *applicationDependencies) healthCheckHandler(w http.ResponseWriter,
+func (a *applicationDependencies) healthcheckHandler(w http.ResponseWriter,
 	r *http.Request) {
 	//panic("Apples & Oranges")
 	data := envelope{
