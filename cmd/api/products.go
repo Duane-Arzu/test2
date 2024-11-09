@@ -14,12 +14,12 @@ import (
 // Product represents the expected structure for incoming product data with optional fields
 // Using pointers allows us to distinguish between empty values and omitted fields in PATCH requests
 type incomingProductData struct {
-	Name          *string  `json:"name"`
-	Description   *string  `json:"description"`
-	Category      *string  `json:"category"`
-	ImageURL      *string  `json:"image_url"`
-	Price         *string  `json:"price"`
-	AverageRating *float32 `json:"average_rating"`
+	Name        *string  `json:"name"`
+	Description *string  `json:"description"`
+	Category    *string  `json:"category"`
+	ImageURL    *string  `json:"image_url"`
+	Price       *string  `json:"price"`
+	AvgRating   *float32 `json:"avg_rating"`
 }
 
 // createProductHandler handles POST requests to create new products
@@ -142,7 +142,7 @@ func (a *applicationDependencies) updateProductHandler(w http.ResponseWriter, r 
 		Price       *string `json:"price"`
 		// Commented fields can be uncommented when needed
 		//UpdatedAt   *time.Time `json:"updated_at"`
-		//AverageRating *float64   `json:"average_rating"`
+		//AvgRating *float64   `json:"avg_rating"`
 	}
 
 	// Parse the JSON request body

@@ -17,7 +17,7 @@ type Review struct {
 	ProductID    int64     `json:"product_id"`    // Identifier of the product being reviewed (foreign key)
 	Author       string    `json:"author"`        // Name of the review's author
 	Rating       int64     `json:"rating"`        // Rating given by the author, constrained to values between 1 and 5
-	ReviewText   string    `json:"review_text"`   // Content of the review, required field
+	Comment      string    `json:"commentt"`      // Content of the comment, required field
 	HelpfulCount int32     `json:"helpful_count"` // Number of "helpful" votes, defaults to 0 if not specified
 	CreatedAt    time.Time `json:"-"`             // Timestamp for when the review was created, auto-set to current time
 	Version      int       `json:"version"`       // Version number to track changes to the review
@@ -31,7 +31,7 @@ type ReviewModel struct {
 // ValidateReview validates required fields and checks constraints on a Review struct.
 func ValidateReview(v *validator.Validator, review *Review) {
 	v.Check(review.Author != "", "author", "must be provided")                             // Ensures author field is not empty
-	v.Check(review.ReviewText != "", "review_text", "must be provided")                    // Ensures review_text is provided
+	v.Check(review.Comment != "", "comment", "must be provided")                           // Ensures review_text is provided
 	v.Check(len(review.Author) <= 25, "author", "must not be more than 25 bytes long")     // Restricts author length to 25 bytes
 	v.Check(review.ProductID > 0, "product_id", "must be a positive integer")              // ProductID must be a valid positive integer
 	v.Check(review.Rating >= 1 && review.Rating <= 5, "rating", "must be between 1 and 5") // Rating must be between 1 and 5
@@ -40,11 +40,11 @@ func ValidateReview(v *validator.Validator, review *Review) {
 // InsertReview adds a new review to the database and retrieves its ID, creation timestamp, and version.
 func (c ReviewModel) InsertReview(review *Review) error {
 	query := `
-		INSERT INTO reviews (product_id, author, rating, review_text, helpful_count)
+		INSERT INTO reviews (product_id, author, rating, comment, helpful_count)
 		VALUES ($1, $2, $3, $4, COALESCE($5, 0))
 		RETURNING review_id, created_at, version
 	`
-	args := []any{review.ProductID, review.Author, review.Rating, review.ReviewText, review.HelpfulCount}
+	args := []any{review.ProductID, review.Author, review.Rating, review.Comment, review.HelpfulCount}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel() // Ensure the timeout context is canceled to free up resources
@@ -62,7 +62,7 @@ func (c ReviewModel) GetReview(id int64) (*Review, error) {
 		return nil, ErrRecordNotFound // Validates ID input to avoid invalid queries
 	}
 	query := `
-		SELECT review_id, product_id, author, rating, review_text, helpful_count, created_at, version
+		SELECT review_id, product_id, author, rating, comment, helpful_count, created_at, version
 		FROM reviews
 		WHERE review_id = $1
 	`
@@ -77,7 +77,7 @@ func (c ReviewModel) GetReview(id int64) (*Review, error) {
 		&review.ProductID,
 		&review.Author,
 		&review.Rating,
-		&review.ReviewText,
+		&review.Comment,
 		&review.HelpfulCount,
 		&review.CreatedAt,
 		&review.Version,
@@ -95,11 +95,11 @@ func (c ReviewModel) GetReview(id int64) (*Review, error) {
 func (c ReviewModel) UpdateReview(review *Review) error {
 	query := `
 		UPDATE reviews
-		SET author = $1, rating = $2, review_text = $3, version = version + 1
+		SET author = $1, rating = $2, comment = $3, version = version + 1
 		WHERE review_id = $4
 		RETURNING version
 	`
-	args := []any{review.Author, review.Rating, review.ReviewText, review.ReviewID}
+	args := []any{review.Author, review.Rating, review.Comment, review.ReviewID}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -139,7 +139,7 @@ func (c ReviewModel) DeleteReview(id int64) error {
 // GetAllReviews retrieves a list of reviews matching a given author name with sorting and pagination.
 func (c ReviewModel) GetAllReviews(author string, filters Filters) ([]*Review, Metadata, error) {
 	query := fmt.Sprintf(`
-	SELECT COUNT(*) OVER(), review_id, product_id, author, rating, review_text, helpful_count, created_at, version
+	SELECT COUNT(*) OVER(), review_id, product_id, author, rating, comment, helpful_count, created_at, version
 	FROM reviews
 	WHERE (to_tsvector('simple', author) @@ plainto_tsquery('simple', $1) OR $1 = '') 
 	ORDER BY %s %s, review_id ASC 
@@ -160,7 +160,7 @@ func (c ReviewModel) GetAllReviews(author string, filters Filters) ([]*Review, M
 	// Process each row and populate reviews slice
 	for rows.Next() {
 		var review Review
-		if err := rows.Scan(&totalRecords, &review.ReviewID, &review.ProductID, &review.Author, &review.Rating, &review.ReviewText, &review.HelpfulCount, &review.CreatedAt, &review.Version); err != nil {
+		if err := rows.Scan(&totalRecords, &review.ReviewID, &review.ProductID, &review.Author, &review.Rating, &review.Comment, &review.HelpfulCount, &review.CreatedAt, &review.Version); err != nil {
 			return nil, Metadata{}, err
 		}
 		reviews = append(reviews, &review)
@@ -184,7 +184,7 @@ func (c ReviewModel) GetAllProductReviews(productID int64) ([]Review, error) {
 	}
 
 	query := `
-		SELECT review_id, author, rating, review_text, helpful_count, created_at, version
+		SELECT review_id, author, rating, comment, helpful_count, created_at, version
 		FROM reviews
 		WHERE product_id = $1
 	`
@@ -206,7 +206,7 @@ func (c ReviewModel) GetAllProductReviews(productID int64) ([]Review, error) {
 			&review.ReviewID,
 			&review.Author,
 			&review.Rating,
-			&review.ReviewText,
+			&review.Comment,
 			&review.HelpfulCount,
 			&review.CreatedAt,
 			&review.Version,
@@ -231,7 +231,7 @@ func (c *ReviewModel) UpdateHelpfulCount(id int64) (*Review, error) {
         UPDATE reviews
         SET helpful_count = helpful_count + 1
         WHERE review_id = $1
-        RETURNING review_id, author, rating, review_text, helpful_count, version
+        RETURNING review_id, author, rating, comment, helpful_count, version
     `
 	var review Review
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -242,7 +242,7 @@ func (c *ReviewModel) UpdateHelpfulCount(id int64) (*Review, error) {
 		&review.ReviewID,
 		&review.Author,
 		&review.Rating,
-		&review.ReviewText,
+		&review.Comment,
 		&review.HelpfulCount,
 		&review.Version,
 	)
@@ -279,7 +279,7 @@ func (c ReviewModel) GetProductReview(rid int64, pid int64) (*Review, error) {
 	}
 
 	//query
-	query := `SELECT review_id, product_id, author, rating, review_text, helpful_count, created_at, version
+	query := `SELECT review_id, product_id, author, rating, comment, helpful_count, created_at, version
 	FROM reviews
 	WHERE review_id = $1 AND product_id = $2
 	`
@@ -293,7 +293,7 @@ func (c ReviewModel) GetProductReview(rid int64, pid int64) (*Review, error) {
 		&review.ProductID,
 		&review.Author,
 		&review.Rating,
-		&review.ReviewText,
+		&review.Comment,
 		&review.HelpfulCount,
 		&review.CreatedAt,
 		&review.Version,

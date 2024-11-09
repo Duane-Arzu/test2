@@ -14,23 +14,22 @@ import (
 
 // Struct to hold incoming review data
 var incomingReviewData struct {
-	ProductID    *int64  `json:"product_id"` // foreign key referencing products
+	ProductID    *int64  `json:"product_id"`
 	Author       *string `json:"author"`
-	Rating       *int64  `json:"rating"` // integer with a constraint (1-5)
+	Rating       *int64  `json:"rating"`
 	HelpfulCount *int32  `json:"helpful_count"`
-	ReviewText   *string `json:"review_text"` // non-null text field
-
+	Comment      *string `json:"comment"`
 }
 
 // Updated createReviewHandler with product existence check
 func (a *applicationDependencies) createReviewHandler(w http.ResponseWriter, r *http.Request) {
 	// Create a local instance of incomingReviewData
 	var incomingReviewData struct {
-		ProductID    *int64  `json:"product_id"` // foreign key referencing products
+		ProductID    *int64  `json:"product_id"`
 		Author       *string `json:"author"`
-		Rating       *int64  `json:"rating"` // integer with a constraint (1-5)
+		Rating       *int64  `json:"rating"`
 		HelpfulCount *int32  `json:"helpful_count"`
-		ReviewText   *string `json:"review_text"` // non-null text field
+		Comment      *string `json:"comment"`
 	}
 
 	// Decode the incoming JSON into the struct
@@ -66,7 +65,7 @@ func (a *applicationDependencies) createReviewHandler(w http.ResponseWriter, r *
 		ProductID:    int64(*incomingReviewData.ProductID),
 		Author:       *incomingReviewData.Author,
 		Rating:       int64(*incomingReviewData.Rating),
-		ReviewText:   *incomingReviewData.ReviewText,
+		Comment:      *incomingReviewData.Comment,
 		HelpfulCount: int32(*incomingReviewData.HelpfulCount),
 		CreatedAt:    time.Now(),
 	}
@@ -157,9 +156,9 @@ func (a *applicationDependencies) updateReviewHandler(w http.ResponseWriter, r *
 
 	// Define a struct to hold incoming JSON data
 	var incomingReviewData struct {
-		Author     *string `json:"author"`
-		Rating     *int64  `json:"rating"`      // integer with a constraint (1-5)
-		ReviewText *string `json:"review_text"` // non-null text field
+		Author  *string `json:"author"`
+		Rating  *int64  `json:"rating"`  // integer with a constraint (1-5)
+		Comment *string `json:"comment"` // non-null text field
 	}
 
 	// Decode the incoming JSON into the struct
@@ -176,8 +175,8 @@ func (a *applicationDependencies) updateReviewHandler(w http.ResponseWriter, r *
 	if incomingReviewData.Rating != nil {
 		review.Rating = *incomingReviewData.Rating
 	}
-	if incomingReviewData.ReviewText != nil {
-		review.ReviewText = *incomingReviewData.ReviewText
+	if incomingReviewData.Comment != nil {
+		review.Comment = *incomingReviewData.Comment
 	}
 
 	// Validate the updated review
