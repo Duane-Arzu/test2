@@ -5,7 +5,7 @@ CREATE TABLE products (
     category text NOT NULL,                 -- Product category
     image_url text NOT NULL,                -- URL for the product's image
     price text NOT NULL,                    -- Product price as text
-    average_rating DECIMAL(3, 2) DEFAULT 0.00, -- Average rating based on reviews
+    avg_rating DECIMAL(3, 2) DEFAULT 0.00, -- Average rating based on reviews
     created_at timestamp(0) WITH TIME ZONE NOT NULL DEFAULT NOW(), -- Date product was added
     version integer NOT NULL DEFAULT 1      -- Version for tracking changes
 );
@@ -16,7 +16,7 @@ CREATE TABLE reviews (
     product_id INT REFERENCES products(product_id) ON DELETE CASCADE, -- Links review to a product
     author VARCHAR(255),                     -- Name of the review author
     rating FLOAT CHECK (rating BETWEEN 1 AND 5), -- Review rating (1-5)
-    review_text text NOT NULL,               -- Review content
+    comment text NOT NULL,               -- Review content
     helpful_count INT DEFAULT 0,             -- Count of helpful votes for the review
     created_at timestamp(0) WITH TIME ZONE NOT NULL DEFAULT NOW(), -- Date review was created
     version integer NOT NULL DEFAULT 1       -- Version for tracking review updates
